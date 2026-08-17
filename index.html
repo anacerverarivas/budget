@@ -172,7 +172,11 @@ textarea#notes{width:100%;min-height:95px;resize:vertical;border:1px solid var(-
       `;
       tr.querySelector('.name-input').oninput = e => { row.name = e.target.value; save(); };
       tr.querySelectorAll('input[data-field]').forEach(inp => {
-        inp.oninput = () => { row[inp.dataset.field] = num(inp.value); render(); };
+        inp.oninput = () => {
+          row[inp.dataset.field] = num(inp.value);
+          updateTotals();
+          save();
+        };
       });
       tr.querySelector('button').onclick = () => { data[listName].splice(i,1); render(); save(); };
       body.appendChild(tr);
@@ -181,6 +185,45 @@ textarea#notes{width:100%;min-height:95px;resize:vertical;border:1px solid var(-
 
   function sumList(listName){
     return data[listName].reduce((acc, v) => ({ budget: acc.budget + num(v.budget), actual: acc.actual + num(v.actual) }), {budget:0, actual:0});
+  }
+
+  function updateTotals(){
+    const bills = sumList('bills');
+    const other = sumList('other');
+    const debt = sumList('debt');
+    const savings = sumList('savings');
+
+    el(LISTS.bills.totalB).textContent = fmt(bills.budget);
+    el(LISTS.bills.totalA).textContent = fmt(bills.actual);
+    el(LISTS.other.totalB).textContent = fmt(other.budget);
+    el(LISTS.other.totalA).textContent = fmt(other.actual);
+    el(LISTS.debt.totalB).textContent = fmt(debt.budget);
+    el(LISTS.debt.totalA).textContent = fmt(debt.actual);
+    el(LISTS.savings.totalB).textContent = fmt(savings.budget);
+    el(LISTS.savings.totalA).textContent = fmt(savings.actual);
+
+    const totalBudget = bills.budget + other.budget + savings.budget + debt.budget;
+    const totalActual = bills.actual + other.actual + savings.actual + debt.actual;
+
+    el('s-bills-b').textContent = fmt(bills.budget);
+    el('s-bills-a').textContent = fmt(bills.actual);
+    el('s-other-b').textContent = fmt(other.budget);
+    el('s-other-a').textContent = fmt(other.actual);
+    el('s-savings-b').textContent = fmt(savings.budget);
+    el('s-savings-a').textContent = fmt(savings.actual);
+    el('s-debt-b').textContent = fmt(debt.budget);
+    el('s-debt-a').textContent = fmt(debt.actual);
+    el('s-total-b').textContent = fmt(totalBudget);
+    el('s-total-a').textContent = fmt(totalActual);
+
+    const income = num(data.income);
+    const leftBudget = income - totalBudget;
+    const leftActual = income - totalActual;
+    const lb = el('s-left-b'), la = el('s-left-a');
+    lb.textContent = fmt(leftBudget);
+    la.textContent = fmt(leftActual);
+    lb.classList.toggle('negative', leftBudget < 0);
+    la.classList.toggle('negative', leftActual < 0);
   }
 
   function render(){
