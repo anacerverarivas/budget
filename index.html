@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Monthly Budget</title>
+<link rel="icon" href="data:,">
+<style>
+  html, body { margin:0; padding:0; background:#EAF4EF; }
+</style>
+</head>
+<body>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Mono:wght@400;700&display=swap');
+
+  *{ box-sizing:border-box; }
+
+  #budget-root{
+    font-family: 'Fraunces', serif;
+    --bg: #EAF4EF;
+    --bg-card: #FFFFFF;
+    --bg-card-2: #F3FAF6;
+    --line: #D7E8DF;
+    --healthy: #2FAE8B;
+    --healthy-dim: #BFEEDE;
+    --amber: #C89A2E;
+    --danger: #D9694B;
+    --text: #223530;
+    --text-dim: #6C877B;
+
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100%;
+    padding: 26px 16px 60px;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  h1{ font-weight:600; font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub{ color: var(--text-dim); font-size: 13px; margin-bottom: 18px; font-family:'Space Mono', monospace; }
+
+  select#month-select{
+    font-family:'Space Mono', monospace; font-size: 13px;
+    background: var(--bg-card); border:1px solid var(--line); color:var(--text);
+    border-radius: 10px; padding: 9px 12px; width:100%; margin-bottom: 14px;
+  }
+
+  .income-card{
+    background: var(--bg-card); border:1px solid var(--line); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 16px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .income-card label{ font-family:'Space Mono', monospace; font-size: 12px; color: var(--text-dim); }
+  .income-card input{
+    font-family:'Fraunces', serif; font-weight:600; font-size: 18px; text-align:right;
+    background: transparent; border:none; color: var(--healthy); width: 110px;
+  }
+
+  .section-title{
+    font-family:'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-dim); margin: 22px 0 8px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .add-row-btn{
+    font-family:'Space Mono', monospace; font-size: 11px; color: var(--healthy);
+    background:none; border:1px dashed var(--healthy-dim); border-radius:8px; padding:4px 8px; cursor:pointer;
+  }
+
+  table.budget-table{ width:100%; border-collapse: collapse; background: var(--bg-card); border:1px solid var(--line); border-radius: 12px; overflow:hidden; }
+  table.budget-table th{
+    font-family:'Space Mono', monospace; font-size: 10.5px; color: var(--text-dim); text-transform:uppercase;
+    text-align:right; padding: 8px 10px; border-bottom:1px solid var(--line);
+  }
+  table.budget-table th:first-child{ text-align:left; }
+  table.budget-table td{ padding: 7px 10px; border-bottom:1px solid var(--line); font-size: 13.5px; }
+  table.budget-table tr:last-child td{ border-bottom:none; }
+  table.budget-table td input[type=number]{
+    font-family:'Space Mono', monospace; font-size: 13px; text-align:right; width: 100%;
+    background: var(--bg-card-2); border:1px solid var(--line); border-radius:6px; padding:5px 6px; color: var(--text);
+  }
+  table.budget-table td.remove{ text-align:center; width: 26px; }
+  table.budget-table td.remove button{ background:none; border:none; color: var(--text-dim); cursor:pointer; font-size:14px; }
+  tr.total-row td{ font-family:'Space Mono', monospace; font-weight:bold; background: var(--bg-card-2); }
+  tr.empty-row td{ font-family:'Space Mono', monospace; font-size:12px; color: var(--text-dim); text-align:center; padding: 14px; }
+
+  .name-input{
+    font-family:'Fraunces', serif; font-size: 13.5px; width: 100%;
+    background: transparent; border:none; color: var(--text);
+  }
+  .name-input::placeholder{ color: var(--text-dim); }
+
+  .summary-card{
+    margin-top: 20px; background: var(--bg-card); border:1px solid var(--line); border-radius: 14px; padding: 16px;
+  }
+  .summary-row{ display:flex; justify-content:space-between; padding: 6px 0; font-family:'Space Mono', monospace; font-size: 13px; border-bottom:1px solid var(--line); }
+  .summary-row:last-child{ border-bottom:none; }
+  .summary-row .label{ color: var(--text-dim); }
+  .summary-row .vals{ display:flex; gap:16px; }
+  .summary-row .vals span{ width: 60px; text-align:right; }
+  .summary-row.big{ font-weight:bold; font-size: 15px; color: var(--text); }
+  .summary-row.left .vals span{ color: var(--healthy); }
+  .summary-row.left .vals span.negative{ color: var(--danger); }
+
+  .col-headers{ display:flex; justify-content:flex-end; gap:16px; font-family:'Space Mono',monospace; font-size:10.5px; color:var(--text-dim); text-transform:uppercase; margin-bottom:4px; padding-right:2px; }
+  .col-headers span{ width:60px; text-align:right; }
+
+  textarea#notes{
+    width:100%; min-height: 80px; font-family:'Fraunces', serif; font-size: 14px;
+    background: var(--bg-card); border:1px solid var(--line); border-radius: 10px; padding: 10px 12px; color: var(--text);
+    resize: vertical;
+  }
+
+  .reset-row{ margin-top: 26px; text-align:center; }
+  .reset-btn{
+    font-family:'Space Mono', monospace; font-size: 11px; color: var(--text-dim);
+    background:none; border:none; text-decoration: underline; cursor: pointer;
+  }
+</style>
+
+<div id="budget-root">
+  <h1>Monthly Budget</h1>
+  <div class="sub">budget vs actual, mes a mes</div>
+
+  <select id="month-select"></select>
+
+  <div class="income-card">
+    <label>total income</label>
+    <input type="number" id="income-input" placeholder="0" />
+  </div>
+
+  <div class="section-title">bills<button class="add-row-btn" data-list="bills">+ añadir</button></div>
+  <table class="budget-table">
+    <thead><tr><th>bill</th><th>budget</th><th>actual</th><th></th></tr></thead>
+    <tbody id="bills-body"></tbody>
+    <tfoot><tr class="total-row"><td>total</td><td id="bills-total-budget">0</td><td id="bills-total-actual">0</td><td></td></tr></tfoot>
+  </table>
+
+  <div class="section-title">other expenses<button class="add-row-btn" data-list="other">+ añadir</button></div>
+  <table class="budget-table">
+    <thead><tr><th>expense</th><th>budget</th><th>actual</th><th></th></tr></thead>
+    <tbody id="other-body"></tbody>
+    <tfoot><tr class="total-row"><td>total</td><td id="other-total-budget">0</td><td id="other-total-actual">0</td><td></td></tr></tfoot>
+  </table>
+
+  <div class="section-title">debt<button class="add-row-btn" data-list="debt">+ añadir</button></div>
+  <table class="budget-table">
+    <thead><tr><th>quién / qué</th><th>budget</th><th>actual</th><th></th></tr></thead>
+    <tbody id="debt-body"></tbody>
+    <tfoot><tr class="total-row"><td>total</td><td id="debt-total-budget">0</td><td id="debt-total-actual">0</td><td></td></tr></tfoot>
+  </table>
+
+  <div class="section-title">savings<button class="add-row-btn" data-list="savings">+ añadir</button></div>
+  <table class="budget-table">
+    <thead><tr><th>concepto</th><th>budget</th><th>actual</th><th></th></tr></thead>
+    <tbody id="savings-body"></tbody>
+    <tfoot><tr class="total-row"><td>total</td><td id="savings-total-budget">0</td><td id="savings-total-actual">0</td><td></td></tr></tfoot>
+  </table>
+
+  <div class="summary-card">
+    <div class="col-headers"><span>budget</span><span>actual</span></div>
+    <div class="summary-row"><span class="label">bills</span><span class="vals"><span id="s-bills-b">0</span><span id="s-bills-a">0</span></span></div>
+    <div class="summary-row"><span class="label">other</span><span class="vals"><span id="s-other-b">0</span><span id="s-other-a">0</span></span></div>
+    <div class="summary-row"><span class="label">savings</span><span class="vals"><span id="s-savings-b">0</span><span id="s-savings-a">0</span></span></div>
+    <div class="summary-row"><span class="label">debt</span><span class="vals"><span id="s-debt-b">0</span><span id="s-debt-a">0</span></span></div>
+    <div class="summary-row big"><span class="label">total</span><span class="vals"><span id="s-total-b">0</span><span id="s-total-a">0</span></span></div>
+    <div class="summary-row big left"><span class="label">income left</span><span class="vals"><span id="s-left-b">0</span><span id="s-left-a">0</span></span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:22px;">notes</div>
+  <textarea id="notes" placeholder="ej: sigo en casa de mis padres, no bills..."></textarea>
+
+  <div class="reset-row">
+    <button class="reset-btn" id="reset-btn">reiniciar este mes</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const MONTHS = ['Agosto','Septiembre','Octubre','Noviembre','Diciembre','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio'];
+  const DEFAULT_BILLS = ['Internet','Via T','Comida','Gasolina','Casa','Limpieza','Higiene','Bus'];
+  const DEFAULT_OTHER = ['Comida fuera','Ropa','Fiesta','Gimnasio','Farmacia','Viajes','Cafés','Belleza','Uñas','Regalos'];
+  const DEFAULT_DEBT = ['Tricount'];
+  const DEFAULT_SAVINGS = ['Ahorro mes pasado'];
+
+  const el = id => document.getElementById(id);
+  const num = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+  const fmt = n => (Math.round(n*100)/100).toString();
+
+  const LISTS = {
+    bills:   { bodyId: 'bills-body',   defaults: DEFAULT_BILLS,   totalB: 'bills-total-budget',   totalA: 'bills-total-actual',   namePlaceholder: 'nombre del bill' },
+    other:   { bodyId: 'other-body',   defaults: DEFAULT_OTHER,   totalB: 'other-total-budget',   totalA: 'other-total-actual',   namePlaceholder: 'nombre del gasto' },
+    debt:    { bodyId: 'debt-body',    defaults: DEFAULT_DEBT,    totalB: 'debt-total-budget',    totalA: 'debt-total-actual',    namePlaceholder: 'quién / qué' },
+    savings: { bodyId: 'savings-body', defaults: DEFAULT_SAVINGS, totalB: 'savings-total-budget', totalA: 'savings-total-actual', namePlaceholder: 'concepto' },
+  };
+
+  let currentMonth = MONTHS[0];
+  let data = emptyData();
+
+  function emptyData(){
+    return {
+      income: 0,
+      bills: DEFAULT_BILLS.map(name => ({ name, budget:0, actual:0 })),
+      other: DEFAULT_OTHER.map(name => ({ name, budget:0, actual:0 })),
+      debt: DEFAULT_DEBT.map(name => ({ name, budget:0, actual:0 })),
+      savings: DEFAULT_SAVINGS.map(name => ({ name, budget:0, actual:0 })),
+      notes: ''
+    };
+  }
+
+  function key(month){ return 'budget:' + month; }
+
+  function migrateList(value, defaults){
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === 'object'){
+      return Object.entries(value).map(([name, v]) => ({ name, budget: num(v.budget), actual: num(v.actual) }));
+    }
+    return defaults.map(name => ({ name, budget:0, actual:0 }));
+  }
+
+  function load(month){
+    let raw;
+    try{ raw = localStorage.getItem(key(month)); }catch(err){ raw = null; }
+    if (raw){
+      try{
+        const parsed = JSON.parse(raw);
+        data = {
+          income: num(parsed.income),
+          bills: migrateList(parsed.bills, DEFAULT_BILLS),
+          other: migrateList(parsed.other, DEFAULT_OTHER),
+          debt: migrateList(parsed.debt, DEFAULT_DEBT),
+          savings: parsed.savings ? migrateList(parsed.savings, DEFAULT_SAVINGS)
+                    : [{ name:'Ahorro mes pasado', budget: num(parsed.savingsBudget), actual: num(parsed.savingsActual) }],
+          notes: parsed.notes || ''
+        };
+      }catch(err){ data = emptyData(); }
+    } else {
+      data = emptyData();
+    }
+  }
+
+  function save(){
+    try{ localStorage.setItem(key(currentMonth), JSON.stringify(data)); }catch(err){ console.error(err); }
+  }
+
+  function renderList(listName){
+    const cfg = LISTS[listName];
+    const body = el(cfg.bodyId);
+    body.innerHTML = '';
+
+    if (data[listName].length === 0){
+      body.innerHTML = `<tr class="empty-row"><td colspan="4">sin filas — pulsa "+ añadir"</td></tr>`;
+    }
+
+    data[listName].forEach((row, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input class="name-input" type="text" value="${row.name || ''}" placeholder="${cfg.namePlaceholder}"/></td>
+        <td><input type="number" step="0.01" placeholder="0" value="${row.budget || ''}" data-field="budget"/></td>
+        <td><input type="number" step="0.01" placeholder="0" value="${row.actual || ''}" data-field="actual"/></td>
+        <td class="remove"><button title="quitar">✕</button></td>
+      `;
+      tr.querySelector('.name-input').oninput = e => { row.name = e.target.value; save(); };
+      tr.querySelectorAll('input[data-field]').forEach(inp => {
+        inp.oninput = () => { row[inp.dataset.field] = num(inp.value); render(); };
+      });
+      tr.querySelector('button').onclick = () => { data[listName].splice(i,1); render(); save(); };
+      body.appendChild(tr);
+    });
+  }
+
+  function sumList(listName){
+    return data[listName].reduce((acc, v) => ({ budget: acc.budget + num(v.budget), actual: acc.actual + num(v.actual) }), {budget:0, actual:0});
+  }
+
+  function render(){
+    el('income-input').value = data.income || '';
+    el('notes').value = data.notes || '';
+
+    Object.keys(LISTS).forEach(renderList);
+
+    const bills = sumList('bills');
+    const other = sumList('other');
+    const debt = sumList('debt');
+    const savings = sumList('savings');
+
+    el(LISTS.bills.totalB).textContent = fmt(bills.budget);
+    el(LISTS.bills.totalA).textContent = fmt(bills.actual);
+    el(LISTS.other.totalB).textContent = fmt(other.budget);
+    el(LISTS.other.totalA).textContent = fmt(other.actual);
+    el(LISTS.debt.totalB).textContent = fmt(debt.budget);
+    el(LISTS.debt.totalA).textContent = fmt(debt.actual);
+    el(LISTS.savings.totalB).textContent = fmt(savings.budget);
+    el(LISTS.savings.totalA).textContent = fmt(savings.actual);
+
+    const totalBudget = bills.budget + other.budget + savings.budget + debt.budget;
+    const totalActual = bills.actual + other.actual + savings.actual + debt.actual;
+
+    el('s-bills-b').textContent = fmt(bills.budget);
+    el('s-bills-a').textContent = fmt(bills.actual);
+    el('s-other-b').textContent = fmt(other.budget);
+    el('s-other-a').textContent = fmt(other.actual);
+    el('s-savings-b').textContent = fmt(savings.budget);
+    el('s-savings-a').textContent = fmt(savings.actual);
+    el('s-debt-b').textContent = fmt(debt.budget);
+    el('s-debt-a').textContent = fmt(debt.actual);
+    el('s-total-b').textContent = fmt(totalBudget);
+    el('s-total-a').textContent = fmt(totalActual);
+
+    const income = num(data.income);
+    const leftBudget = income - totalBudget;
+    const leftActual = income - totalActual;
+    const lb = el('s-left-b'), la = el('s-left-a');
+    lb.textContent = fmt(leftBudget); lb.classList.toggle('negative', leftBudget < 0);
+    la.textContent = fmt(leftActual); la.classList.toggle('negative', leftActual < 0);
+
+    save();
+  }
+
+  el('month-select').innerHTML = MONTHS.map(m => `<option value="${m}">${m}</option>`).join('');
+  el('month-select').onchange = e => {
+    currentMonth = e.target.value;
+    load(currentMonth);
+    render();
+  };
+
+  el('income-input').oninput = e => { data.income = num(e.target.value); render(); };
+  el('notes').oninput = e => { data.notes = e.target.value; save(); };
+
+  document.querySelectorAll('.add-row-btn').forEach(btn => {
+    btn.onclick = () => {
+      const listName = btn.dataset.list;
+      data[listName].push({ name:'', budget:0, actual:0 });
+      render();
+      save();
+    };
+  });
+
+  el('reset-btn').onclick = () => {
+    if (!confirm('¿Reiniciar todos los datos de ' + currentMonth + '?')) return;
+    data = emptyData();
+    render();
+  };
+
+  load(currentMonth);
+  render();
+})();
+</script>
+</body>
+</html>
