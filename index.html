@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monthly Budget</title>
+<link rel="icon" href="data:,">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap');
+:root{--bg:#f4f7f3;--paper:#fffdf9;--green:#d9ead3;--green-dark:#486b52;--peach:#fce5cd;--gray:#dedede;--ink:#28352d;--muted:#707a73;--line:#e4e7e2;--accent:#6b8f71;--danger:#b85b4a;--shadow:0 8px 28px rgba(48,65,53,.07)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif}
+body{padding:28px 18px 60px}
+#budget-root{max-width:1120px;margin:0 auto}
+.page-title{background:var(--green);border-radius:18px;padding:25px 30px 22px;margin-bottom:18px;text-align:center;box-shadow:var(--shadow)}
+h1{margin:0;font-family:'Playfair Display',serif;font-size:34px;font-weight:600}.sub{margin-top:6px;color:#58705f;font-size:12px;letter-spacing:.13em;text-transform:uppercase}
+.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}.toolbar-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:13px 16px;box-shadow:var(--shadow)}.toolbar-label{display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}select#month-select,.income-input-wrap input{width:100%;border:0;background:transparent;color:var(--ink);font:600 17px 'DM Sans',sans-serif;outline:none;padding:0}.income-input-wrap{display:flex;align-items:center;gap:8px}.currency{font-size:17px;font-weight:600;color:var(--accent)}.income-input-wrap input{text-align:right}
+.dashboard{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.8fr);gap:18px;align-items:start}.column{display:flex;flex-direction:column;gap:18px}
+.section-card{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}.section-head{background:var(--peach);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}.section-title{margin:0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#554b42}.section-description{padding:10px 16px 0;color:var(--muted);font-size:11px}
+.add-row-btn{font:600 11px 'DM Sans',sans-serif;color:var(--green-dark);background:rgba(255,255,255,.65);border:1px solid rgba(72,107,82,.18);border-radius:8px;padding:6px 9px;cursor:pointer}.add-row-btn:hover{background:#fff}
+.table-wrap{overflow-x:auto}table.budget-table{width:100%;border-collapse:collapse}table.budget-table th{background:var(--gray);color:#555;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:right;padding:9px 12px;white-space:nowrap}table.budget-table th:first-child{text-align:left}table.budget-table td{padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}table.budget-table tr:last-child td{border-bottom:0}.calc-input{width:100%;min-width:72px;padding:7px 8px;text-align:right;background:#fbfcfa;border:1px solid var(--line);border-radius:7px;color:var(--ink);font:500 12px 'DM Sans',sans-serif;outline:none}.calc-input:focus,.name-input:focus,textarea#notes:focus{border-color:#a9c5ad;box-shadow:0 0 0 3px rgba(169,197,173,.18)}.name-input{width:100%;border:1px solid transparent;background:transparent;color:var(--ink);font:500 13px 'DM Sans',sans-serif;outline:none;padding:6px 5px;border-radius:6px}.name-input::placeholder{color:#a0aaa3}td.remove{width:38px;text-align:center}td.remove button{border:0;background:transparent;color:#a2aaa5;cursor:pointer;font-size:13px}td.remove button:hover{color:var(--danger)}
+tr.total-row td{background:#f1f2f0;font-weight:700;font-size:12px;border-top:1px solid #dfe2de}tr.empty-row td{text-align:center;color:var(--muted);padding:16px;font-size:12px}
+.weekly-table th:nth-child(2),.weekly-table td:nth-child(2){min-width:105px}.weekly-note{padding:12px 16px;background:#f5f8f4;color:var(--muted);font-size:11px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.summary-card{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}.summary-head{background:#999;color:white;padding:12px 16px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.summary-inner{padding:0 16px 14px}.col-headers{display:grid;grid-template-columns:1fr 86px 86px;gap:12px;padding:10px 0 7px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.col-headers span{text-align:right}.col-headers span:first-child{text-align:left}.summary-row{display:grid;grid-template-columns:1fr 86px 86px;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12px}.summary-row .label{color:var(--muted);font-weight:500}.summary-row .vals{display:contents}.summary-row .vals span{text-align:right;font-variant-numeric:tabular-nums}.summary-row.big{font-weight:700;font-size:13px}.summary-row.left{border-bottom:0;margin:6px -16px -14px;padding:13px 16px;background:#edf3ed}.summary-row.left .vals span{color:var(--accent);font-weight:700}.summary-row.left .vals span.negative{color:var(--danger)}
+.week-summary{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}.week-summary-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 0}.week-line{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}.week-line:last-child{border-bottom:0}.week-line span:first-child{color:var(--muted)}.week-line span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.notes-card{padding:16px;background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.notes-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}textarea#notes{width:100%;min-height:95px;resize:vertical;border:1px solid var(--line);border-radius:9px;padding:10px 11px;background:#fbfcfa;color:var(--ink);font:13px 'DM Sans',sans-serif;outline:none}.reset-row{text-align:right;padding:2px 4px}.reset-btn{border:0;background:transparent;color:#9a9f9b;font:500 11px 'DM Sans',sans-serif;text-decoration:underline;cursor:pointer}.reset-btn:hover{color:var(--danger)}
+@media(max-width:800px){body{padding:18px 12px 45px}.dashboard{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.weekly-table{min-width:700px}}
+@media(max-width:520px){h1{font-size:28px}.page-title{padding:20px}table.budget-table th,table.budget-table td{padding-left:8px;padding-right:8px}.summary-row,.col-headers{grid-template-columns:1fr 72px 72px;gap:8px}}
+</style>
+
+<style>
+@media (max-width: 600px){
+  body{padding:10px 8px 30px}
+  #budget-root{max-width:100%}
+  .page-title{padding:14px 12px;margin-bottom:10px;border-radius:12px}
+  h1{font-size:24px}
+  .sub{font-size:9px;letter-spacing:.08em}
+  .toolbar{gap:8px;margin-bottom:10px}
+  .toolbar-card{padding:10px 12px}
+  .dashboard,.column{gap:10px}
+  .section-card,.summary-card,.notes-card{border-radius:12px}
+  .section-head{padding:10px 12px}
+  .section-description{padding:7px 12px 0}
+  .weekly-note{padding:9px 12px}
+
+  /* Fixed expenses stays a compact table */
+  table.budget-table:not(.weekly-table) th,
+  table.budget-table:not(.weekly-table) td{padding:6px 5px}
+  table.budget-table:not(.weekly-table) th{font-size:8px}
+  table.budget-table:not(.weekly-table) td:first-child{width:38%}
+  table.budget-table:not(.weekly-table) td input[type="text"]:not(.name-input){min-width:0;width:100%;padding:7px 4px;font-size:11px}
+  .name-input{font-size:11px;padding:6px 3px}
+
+  /* Weekly table becomes stacked cards */
+  .weekly-table{min-width:0!important;display:block;padding:0 10px 10px}
+  .weekly-table thead{display:none}
+  .weekly-table tbody,.weekly-table tfoot{display:block}
+  .weekly-table tbody tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0;padding:10px;background:#fbfcfa;border:1px solid var(--line);border-radius:10px}
+  .weekly-table tbody td{display:block;border:0!important;padding:0!important;min-width:0!important}
+  .weekly-table tbody td:first-child{grid-column:1/-1}
+  .weekly-table tbody td:nth-child(2){grid-column:1/-1}
+  .weekly-table tbody td:last-child{grid-column:3;display:flex;justify-content:flex-end;align-items:end}
+  .weekly-table tbody td::before{display:block;font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .weekly-table tbody td:nth-child(2)::before{content:"Presupuesto mensual"}
+  .weekly-table tbody td:nth-child(3)::before{content:"Semana 1"}
+  .weekly-table tbody td:nth-child(4)::before{content:"Semana 2"}
+  .weekly-table tbody td:nth-child(5)::before{content:"Semana 3"}
+  .weekly-table tbody td:nth-child(6)::before{content:"Semana 4"}
+  .weekly-table tbody td:nth-child(7)::before{content:"Semana 5"}
+  .weekly-table tbody td:nth-child(8)::before{content:"Total mes"}
+  .weekly-table tbody input{width:100%!important;min-width:0!important;padding:8px 6px!important;font-size:12px!important}
+  .weekly-table tbody .name-input{font-size:14px!important;font-weight:600;padding:4px 2px!important}
+  .weekly-table .month-row-total{font-weight:700;padding-top:8px!important}
+  .weekly-table tfoot tr{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:9px;border-radius:9px}
+  .weekly-table tfoot td{padding:3px!important;text-align:center!important;border:0!important;font-size:10px!important}
+  .weekly-table tfoot td:first-child{grid-column:1/-1;text-align:left!important}
+  .weekly-table tfoot td:last-child{display:none}
+
+  .summary-inner{padding:0 12px 12px}
+  .summary-row,.col-headers{grid-template-columns:1fr 68px 68px;gap:5px}
+  .summary-row{font-size:11px}
+  textarea#notes{min-height:75px}
+}
+</style>
+
+
+<style>
+@media (max-width: 600px){
+  .weekly-table tfoot tr{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+    background:#f1f2f0;
+    padding:10px!important;
+  }
+
+  .weekly-table tfoot td{
+    display:block!important;
+    text-align:left!important;
+    padding:8px!important;
+    background:#fffdf9;
+    border:1px solid var(--line)!important;
+    border-radius:8px;
+    font-size:12px!important;
+    font-weight:700;
+  }
+
+  .weekly-table tfoot td::before{
+    display:block;
+    font-size:8px;
+    font-weight:700;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+
+  .weekly-table tfoot td:nth-child(1){
+    grid-column:1/-1;
+    background:transparent;
+    border:0!important;
+    padding:0 0 2px!important;
+    font-size:11px!important;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .weekly-table tfoot td:nth-child(1)::before{content:""}
+
+  .weekly-table tfoot td:nth-child(2)::before{content:"Presupuesto mensual"}
+  .weekly-table tfoot td:nth-child(3)::before{content:"Semana 1"}
+  .weekly-table tfoot td:nth-child(4)::before{content:"Semana 2"}
+  .weekly-table tfoot td:nth-child(5)::before{content:"Semana 3"}
+  .weekly-table tfoot td:nth-child(6)::before{content:"Semana 4"}
+  .weekly-table tfoot td:nth-child(7)::before{content:"Semana 5"}
+
+  .weekly-table tfoot td:nth-child(8){
+    grid-column:1/-1;
+    background:#edf3ed;
+    border-color:#d8e5d9!important;
+    font-size:15px!important;
+    color:var(--green-dark);
+  }
+  .weekly-table tfoot td:nth-child(8)::before{
+    content:"Total gastado del mes";
+    color:var(--green-dark);
+  }
+
+  .weekly-table tfoot td:nth-child(9){display:none!important}
+}
+</style>
+
+</head>
+<body>
+<div id="budget-root">
+<header class="page-title"><h1>Monthly Budget</h1><div class="sub">fixed expenses · weekly spending · month by month</div></header>
+<div class="toolbar">
+<div class="toolbar-card"><span class="toolbar-label">Month</span><select id="month-select"></select></div>
+<div class="toolbar-card"><span class="toolbar-label">Total income</span><div class="income-input-wrap"><span class="currency">€</span><input type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" id="income-input" class="calc-input" placeholder="0"></div></div>
+</div>
+<main class="dashboard">
+<div class="column">
+<section class="section-card">
+  <div class="section-head"><h2 class="section-title">Monthly fixed expenses</h2><button class="add-row-btn" data-list="fixed">+ añadir</button></div>
+  <div class="section-description"></div>
+  <div class="table-wrap"><table class="budget-table"><thead><tr><th>Expense</th><th>Budget</th><th>Actual</th><th></th></tr></thead><tbody id="fixed-body"></tbody><tfoot><tr class="total-row"><td>Total fixed</td><td id="fixed-total-budget">0</td><td id="fixed-total-actual">0</td><td></td></tr></tfoot></table></div>
+</section>
+<section class="section-card">
+  <div class="section-head"><h2 class="section-title">Weekly spending</h2><button class="add-row-btn" data-list="weekly">+ añadir</button></div>
+  <div class="section-description"></div>
+  <div class="weekly-note"></div>
+  <div class="table-wrap"><table class="budget-table weekly-table"><thead><tr><th>Expense</th><th>Monthly budget</th><th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th><th>Week 5</th><th>Month total</th><th></th></tr></thead><tbody id="weekly-body"></tbody><tfoot><tr class="total-row"><td>Total</td><td id="weekly-budget-total">0</td><td id="week1-total">0</td><td id="week2-total">0</td><td id="week3-total">0</td><td id="week4-total">0</td><td id="week5-total">0</td><td id="weekly-total">0</td><td></td></tr></tfoot></table></div>
+</section>
+</div>
+<div class="column">
+<section class="summary-card">
+  <div class="summary-head">Monthly summary</div>
+  <div class="summary-inner">
+    <div class="col-headers"><span></span><span>Budget</span><span>Actual</span></div>
+    <div class="summary-row"><span class="label">Fixed expenses</span><span class="vals"><span id="s-fixed-b">0</span><span id="s-fixed-a">0</span></span></div>
+    <div class="summary-row"><span class="label">Weekly spending</span><span class="vals"><span id="s-weekly-b">0</span><span id="s-weekly-a">0</span></span></div>
+    <div class="summary-row big"><span class="label">Total spent</span><span class="vals"><span id="s-total-b">0</span><span id="s-total-a">0</span></span></div>
+    <div class="summary-row big left"><span class="label">Income left</span><span class="vals"><span id="s-left-b">0</span><span id="s-left-a">0</span></span></div>
+    <div class="week-summary"><div class="week-summary-title">Spent by week</div>
+      <div class="week-line"><span>Week 1</span><span id="s-week1">0 €</span></div>
+      <div class="week-line"><span>Week 2</span><span id="s-week2">0 €</span></div>
+      <div class="week-line"><span>Week 3</span><span id="s-week3">0 €</span></div>
+      <div class="week-line"><span>Week 4</span><span id="s-week4">0 €</span></div>
+      <div class="week-line"><span>Week 5</span><span id="s-week5">0 €</span></div>
+    </div>
+  </div>
+</section>
+<section class="notes-card"><div class="notes-title">Notes</div><textarea id="notes" placeholder="ej: este mes tengo un viaje, cumpleaños, gasto extra..."></textarea></section>
+<div class="reset-row"><button class="reset-btn" id="reset-btn">reiniciar este mes</button></div>
+</div>
+</main></div>
+<script>
+(function(){
+  const MONTHS = ['Agosto','Septiembre','Octubre','Noviembre','Diciembre','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio'];
+  const DEFAULT_FIXED = ['Alquiler','Internet / Wifi','Gimnasio','Via T','Gasolina','Casa','Limpieza','Higiene','Bus'];
+  const DEFAULT_WEEKLY = ['Comida','Ocio','Cafés','Ropa','Farmacia','Viajes','Belleza','Uñas','Regalos','Otros'];
+  const el = id => document.getElementById(id);
+  const num = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+  const fmt = n => (Math.round(n*100)/100).toString();
+  function applyCalcExpression(rawValue, currentValue){
+    const raw=String(rawValue ?? '').trim().replace(/,/g, '.').replace(/\s+/g, '');
+    if(raw==='') return 0;
+
+    // +17 o -5: opera sobre el valor que habia al entrar en la casilla.
+    if(/^[+-]\d+(?:\.\d+)?$/.test(raw)){
+      const amount=num(raw.slice(1));
+      return raw[0]==='+' ? currentValue + amount : currentValue - amount;
+    }
+
+    // Tambien admite que el usuario deje visible el valor anterior y escriba al final:
+    // 40+17 -> 57, 40-5 -> 35.
+    const inline=raw.match(/^(-?\d+(?:\.\d+)?)([+-])(\d+(?:\.\d+)?)$/);
+    if(inline){
+      const left=num(inline[1]), amount=num(inline[3]);
+      return inline[2]==='+' ? left + amount : left - amount;
+    }
+
+    // 25 (sin operacion) sustituye directamente el valor anterior.
+    if(/^-?\d+(?:\.\d+)?$/.test(raw)) return num(raw);
+
+    // Entrada no valida: conserva el valor anterior.
+    return currentValue;
+  }
+  function bindCalcInput(inp, getValue, setValue){
+    inp.addEventListener('focus',()=>{
+      // Guardamos el valor que habia al entrar, pero NO seleccionamos ni borramos el contenido.
+      inp.dataset.baseValue=String(getValue());
+    });
+    const commit=()=>{
+      const base=num(inp.dataset.baseValue ?? getValue());
+      const next=applyCalcExpression(inp.value, base);
+      setValue(next);
+      inp.value=next === 0 ? '' : fmt(next);
+      inp.dataset.baseValue=String(next);
+      updateTotals();
+      save();
+    };
+    inp.addEventListener('blur',commit);
+    inp.addEventListener('keydown',e=>{
+      // Si la casilla ya contiene un numero y pulsas + o -, colocamos el cursor al final
+      // para formar, por ejemplo, 40+17 o 40-5 sin borrar el 40 anterior.
+      if((e.key==='+' || e.key==='-') && /^-?\d+(?:[.,]\d+)?$/.test(inp.value.trim())){
+        const end=inp.value.length;
+        if(typeof inp.setSelectionRange==='function') inp.setSelectionRange(end,end);
+      }
+      if(e.key==='Enter'){
+        e.preventDefault();
+        inp.blur();
+      }
+      if(e.key==='Escape'){
+        e.preventDefault();
+        inp.value=getValue() ? fmt(getValue()) : '';
+        inp.blur();
+      }
+    });
+  }
+  const blankWeeks = () => ({week1:0,week2:0,week3:0,week4:0,week5:0});
+
+  let currentMonth = MONTHS[0];
+  let data = emptyData();
+
+  function emptyData(){
+    return {
+      income: 0,
+      fixed: DEFAULT_FIXED.map(name => ({name,budget:0,actual:0})),
+      weekly: DEFAULT_WEEKLY.map(name => ({name,...blankWeeks()})),
+      notes: ''
+    };
+  }
+  function key(month){ return 'budget:' + month; }
+  function migrateFixed(value){
+    if(Array.isArray(value)) return value.map(v => ({name:v.name || '',budget:num(v.budget),actual:num(v.actual)}));
+    if(value && typeof value === 'object') return Object.entries(value).map(([name,v]) => ({name,budget:num(v.budget),actual:num(v.actual)}));
+    return DEFAULT_FIXED.map(name => ({name,budget:0,actual:0}));
+  }
+  function migrateWeekly(value, oldOther){
+    if(Array.isArray(value)) return value.map(v => ({name:v.name || '',budget:num(v.budget),week1:num(v.week1),week2:num(v.week2),week3:num(v.week3),week4:num(v.week4),week5:num(v.week5)}));
+    // Existing versions used "other" as monthly expenses. Keep those values visible in Week 1
+    // instead of silently deleting them during migration.
+    if(Array.isArray(oldOther)) return oldOther.map(v => ({name:v.name || '',budget:num(v.budget),week1:num(v.actual),week2:0,week3:0,week4:0,week5:0}));
+    return DEFAULT_WEEKLY.map(name => ({name,budget:0,...blankWeeks()}));
+  }
+  function load(month){
+    let raw=null;
+    try{raw=localStorage.getItem(key(month));}catch(err){}
+    if(raw){
+      try{
+        const parsed=JSON.parse(raw);
+        data={
+          income:num(parsed.income),
+          fixed:migrateFixed(parsed.fixed || parsed.bills),
+          weekly:migrateWeekly(parsed.weekly, parsed.other),
+          notes:parsed.notes || ''
+        };
+      }catch(err){data=emptyData();}
+    }else data=emptyData();
+  }
+  function save(){try{localStorage.setItem(key(currentMonth),JSON.stringify(data));}catch(err){console.error(err);}}
+
+  function renderFixed(){
+    const body=el('fixed-body'); body.innerHTML='';
+    if(!data.fixed.length){body.innerHTML='<tr class="empty-row"><td colspan="4">sin filas — pulsa "+ añadir"</td></tr>';return;}
+    data.fixed.forEach((row,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><input class="name-input" type="text" value="${escapeHtml(row.name)}" placeholder="nombre del gasto"/></td><td><input type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="calc-input" placeholder="0" value="${row.budget || ''}" data-field="budget"/></td><td><input type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="calc-input" placeholder="0" value="${row.actual || ''}" data-field="actual"/></td><td class="remove"><button title="quitar">✕</button></td>`;
+      tr.querySelector('.name-input').oninput=e=>{row.name=e.target.value;save();};
+      tr.querySelectorAll('input[data-field]').forEach(inp=>bindCalcInput(inp,()=>row[inp.dataset.field],v=>{row[inp.dataset.field]=v;}));
+      tr.querySelector('button').onclick=()=>{data.fixed.splice(i,1);render();};
+      body.appendChild(tr);
+    });
+  }
+
+  function renderWeekly(){
+    const body=el('weekly-body'); body.innerHTML='';
+    if(!data.weekly.length){
+      body.innerHTML='<tr class="empty-row"><td colspan="9">sin filas — pulsa "+ añadir"</td></tr>';
+      return;
+    }
+    data.weekly.forEach((row,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><input class="name-input" type="text" value="${escapeHtml(row.name)}" placeholder="nombre del gasto"/></td>
+        <td><input type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="calc-input" placeholder="0" value="${row.budget || ''}" data-week-budget="budget"/></td>
+        <td><input type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="calc-input" placeholder="0" value="${row.week1 || ''}" data-week="week1"/></td>
+        <td><input type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="calc-input" placeholder="0" value="${row.week2 || ''}" data-week="week2"/></td>
+        <td><input type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="calc-input" placeholder="0" value="${row.week3 || ''}" data-week="week3"/></td>
+        <td><input type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="calc-input" placeholder="0" value="${row.week4 || ''}" data-week="week4"/></td>
+        <td><input type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="calc-input" placeholder="0" value="${row.week5 || ''}" data-week="week5"/></td>
+        <td class="month-row-total" id="weekly-row-total-${i}">0</td>
+        <td class="remove"><button title="quitar">✕</button></td>`;
+      tr.querySelector('.name-input').oninput=e=>{row.name=e.target.value;save();};
+      bindCalcInput(tr.querySelector('input[data-week-budget]'),()=>row.budget,v=>{row.budget=v;});
+      tr.querySelectorAll('input[data-week]').forEach(inp=>bindCalcInput(inp,()=>row[inp.dataset.week],v=>{row[inp.dataset.week]=v;}));
+      tr.querySelector('button').onclick=()=>{data.weekly.splice(i,1);render();};
+      body.appendChild(tr);
+    });
+    updateWeeklyRowTotals();
+  }
+
+  function escapeHtml(value){return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function fixedTotals(){return data.fixed.reduce((a,v)=>({budget:a.budget+num(v.budget),actual:a.actual+num(v.actual)}),{budget:0,actual:0});}
+  function weeklyTotals(){
+    const t={budget:0,week1:0,week2:0,week3:0,week4:0,week5:0};
+    data.weekly.forEach(r=>{
+      t.budget += num(r.budget);
+      ['week1','week2','week3','week4','week5'].forEach(w=>t[w]+=num(r[w]));
+    });
+    t.total=Object.values(t).reduce((a,v)=>a+v,0)-t.budget;
+    t.actualTotal=t.week1+t.week2+t.week3+t.week4+t.week5;
+    return t;
+  }
+
+  function updateWeeklyRowTotals(){
+    data.weekly.forEach((r,i)=>{const target=el('weekly-row-total-'+i);if(target)target.textContent=fmt(['week1','week2','week3','week4','week5'].reduce((a,w)=>a+num(r[w]),0));});
+  }
+  function updateTotals(){
+    const f=fixedTotals(),w=weeklyTotals(),totalBudget=f.budget+w.budget,totalActual=f.actual+w.actualTotal;
+    el('fixed-total-budget').textContent=fmt(f.budget);
+    el('fixed-total-actual').textContent=fmt(f.actual);
+    el('weekly-budget-total').textContent=fmt(w.budget);
+    ['week1','week2','week3','week4','week5'].forEach(k=>el(k+'-total').textContent=fmt(w[k]));
+    el('weekly-total').textContent=fmt(w.actualTotal);
+    updateWeeklyRowTotals();
+
+    el('s-fixed-b').textContent=fmt(f.budget);
+    el('s-fixed-a').textContent=fmt(f.actual);
+    el('s-weekly-b').textContent=fmt(w.budget);
+    el('s-weekly-a').textContent=fmt(w.actualTotal);
+    el('s-total-b').textContent=fmt(totalBudget);
+    el('s-total-a').textContent=fmt(totalActual);
+
+    const income=num(data.income),leftB=income-totalBudget,leftA=income-totalActual;
+    const lb=el('s-left-b'),la=el('s-left-a');
+    lb.textContent=fmt(leftB);la.textContent=fmt(leftA);
+    lb.classList.toggle('negative',leftB<0);la.classList.toggle('negative',leftA<0);
+
+    ['week1','week2','week3','week4','week5'].forEach(k=>el('s-'+k).textContent=fmt(w[k])+' €');
+  }
+
+  function render(){el('income-input').value=data.income||'';el('notes').value=data.notes||'';renderFixed();renderWeekly();updateTotals();save();}
+
+  el('month-select').innerHTML=MONTHS.map(m=>`<option value="${m}">${m}</option>`).join('');
+  el('month-select').onchange=e=>{currentMonth=e.target.value;load(currentMonth);render();};
+  bindCalcInput(el('income-input'),()=>data.income,v=>{data.income=v;});
+  el('notes').oninput=e=>{data.notes=e.target.value;save();};
+
+  document.querySelectorAll('.add-row-btn').forEach(btn=>btn.onclick=()=>{
+    const list=btn.dataset.list;
+    if(list==='fixed')data.fixed.push({name:'',budget:0,actual:0});
+    else data.weekly.push({name:'',budget:0,...blankWeeks()});
+    render();
+    const body=el(list==='fixed'?'fixed-body':'weekly-body');const input=body.querySelectorAll('.name-input');if(input.length)input[input.length-1].focus();
+  });
+  el('reset-btn').onclick=()=>{if(!confirm('¿Reiniciar todos los datos de '+currentMonth+'?'))return;data=emptyData();try{localStorage.removeItem(key(currentMonth));}catch(err){}render();};
+  load(currentMonth);render();
+})();
+</script>
+</body>
+</html>
